@@ -18,8 +18,8 @@ import sys
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID (pass as 1st argument) and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = sys.argv[1]
-SAMPLE_RANGE_NAME = 'cc!A1:B100'
+CC_SPREADSHEET_ID = sys.argv[1]
+CC_RANGE_NAME = 'cc!A1:B100'
 
 def main():
   """Shows basic usage of the Sheets API.
@@ -45,24 +45,40 @@ def main():
 
   service = build('sheets', 'v4', credentials=creds)
 
-  # 
+  # query type a (replace with cnc)
   def queryip(ipinput):
     ipresult = subprocess.getoutput('nslookup '+ ipinput)
     return ipresult
 
+  # query type b (replace with rig)
+
+  # query type c (replace with net)
 
   # Call the Sheets API
   sheet = service.spreadsheets()
-  result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
-                              range=SAMPLE_RANGE_NAME).execute()
+  result = sheet.values().get(spreadsheetId=CC_SPREADSHEET_ID,
+                              range=CC_RANGE_NAME).execute()
   values = result.get('values', [])
 
+  # keep track of row for reporting
+  rowNum=1
+
   if not values:
-    print('No data found.')
+    print('No data found in sheet (check cc tab).')
   else:      
     for row in values:
-      output = queryip(row[0])
-      print (output)
+      # check for missing entries
+      if (row[0] == "" or row[1] == ""):
+        print("Missing data on row: " + str(rowNum))
+        rowNum+=1
+      # run a naming check on the entries
+      elif (row[0][-4:] != ".com" or row[1][-4:] != ".com"):
+        print("Invalid data on row: " + str(rowNum))
+        rowNum+=1
+      else:
+        output = queryip(row[0])
+        print (output.count('\n'))
+        rowNum+=1
 
 if __name__ == '__main__':
     main()
