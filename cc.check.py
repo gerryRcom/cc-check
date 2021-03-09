@@ -47,8 +47,11 @@ def main():
 
   # query type a (replace with cnc)
   def queryip(ipinput):
-    ipresult = subprocess.getoutput('nslookup '+ ipinput)
-    return ipresult
+    ipresult = subprocess.run(['nslookup', ipinput], capture_output=True, text=True)
+    if (ipresult.stderr != ""):
+      return ipresult.stderr
+    else:
+      return ipresult.stdout
 
   # query type b (replace with rig)
 
@@ -60,7 +63,7 @@ def main():
                               range=CC_RANGE_NAME).execute()
   values = result.get('values', [])
 
-  # keep track of row for reporting
+  # keep track of row number for reporting
   rowNum=1
 
   if not values:
@@ -77,7 +80,11 @@ def main():
         rowNum+=1
       else:
         output = queryip(row[0])
-        print (output.count('\n'))
+        for line in output.splitlines():
+          if ('Server' in line):
+            print(line)
+          elif ('Address' in line):
+            print(line.split()[-1])    
         rowNum+=1
 
 if __name__ == '__main__':
